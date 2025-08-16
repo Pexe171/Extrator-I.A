@@ -1,0 +1,7 @@
+@"
+node_modules/
+**/.local-chromium/
+sessions/
+dist/
+*.log
+"@ | Out-File -Encoding UTF8 .gitignore
