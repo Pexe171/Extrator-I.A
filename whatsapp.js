@@ -2,6 +2,7 @@
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth } = pkg;
 import qrcode from 'qrcode-terminal';
+import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -24,9 +25,14 @@ export function createSession(nome, janela) {
   const pastaSessao = path.join(pastaDados, nome);
   if (!fs.existsSync(pastaSessao)) fs.mkdirSync(pastaSessao, { recursive: true });
 
-  cliente.on('qr', qr => {
+  cliente.on('qr', async qr => {
     qrcode.generate(qr, { small: true });
-    janela.webContents.send('session-qr', { nome, qr });
+    try {
+      const qrImg = await QRCode.toDataURL(qr);
+      janela.webContents.send('session-qr', { nome, qr: qrImg });
+    } catch (err) {
+      registrarErro(`Falha ao gerar QR Code: ${err.message}`);
+    }
   });
 
   cliente.on('ready', () => {
