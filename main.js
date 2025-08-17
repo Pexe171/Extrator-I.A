@@ -65,6 +65,6 @@ ipcMain.on('add-client', (_e, { sessao, numero }) => {
   janelaPrincipal.webContents.send('clients-updated', { sessao, clientes });
 });
 
-ipcMain.on('export-chats', (_e, { numero, formato }) => {
-  exportarConversas(numero, formato);
+ipcMain.on('export-chats', (_e, { sessao, numero, formato }) => {
+  exportarConversas(sessao, numero, formato);
 });
