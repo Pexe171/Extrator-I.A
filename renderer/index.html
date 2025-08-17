@@ -1,34 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Extrator-I.A</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator-I.A</title>
+    
+    <!-- Link para o novo arquivo de estilos -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Carrega Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-  <div id="app">
-    <aside id="sessions-panel">
-      <div id="new-session">
-        <input id="session-name" placeholder="Nome da sessão" />
-        <button id="create-session">Criar sessão</button>
-      </div>
-      <ul id="sessions"></ul>
-    </aside>
-    <main id="clients-panel">
-      <div id="client-controls">
-        <input id="client-search" placeholder="Buscar cliente" />
-        <div id="new-client">
-          <input id="client-number" placeholder="Número do cliente" />
-          <button id="add-client">Adicionar</button>
-        </div>
-      </div>
-      <ul id="clients"></ul>
-    </main>
-    <section id="preview-panel">
-      <div id="chat-preview"></div>
-    </section>
-  </div>
-  <button id="export-chats">Exportar Conversas</button>
-  <script src="renderer.js"></script>
+    <div id="app">
+        <!-- Painel de Sessões (Esquerda) -->
+        <aside id="sessions-panel">
+            <div class="panel-header">
+                <h2><i class="fab fa-whatsapp"></i> Sessões</h2>
+            </div>
+            <div id="new-session" class="panel-form">
+                <input id="session-name" placeholder="Nome da nova sessão" />
+                <button id="create-session">
+                    <i class="fas fa-plus"></i> Criar Sessão
+                </button>
+            </div>
+            <ul id="sessions" class="panel-list">
+                <!-- Itens da sessão serão inseridos aqui pelo renderer.js -->
+            </ul>
+        </aside>
+
+        <!-- Painel de Clientes (Meio) -->
+        <main id="clients-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-users"></i> Clientes</h2>
+            </div>
+            <div id="client-controls" class="panel-form">
+                <input id="client-search" placeholder="Buscar cliente..." />
+                <div id="new-client">
+                    <input id="client-number" placeholder="Número do cliente" />
+                    <button id="add-client">Adicionar</button>
+                </div>
+            </div>
+            <ul id="clients" class="panel-list">
+                <!-- Itens de cliente serão inseridos aqui pelo renderer.js -->
+            </ul>
+        </main>
+
+        <!-- Painel de Visualização (Direita) -->
+        <section id="preview-panel">
+             <div class="panel-header">
+                <h2><i class="fas fa-eye"></i> Visualização da Conversa</h2>
+                <button id="export-chats">
+                    <i class="fas fa-download"></i> Exportar Conversas
+                </button>
+            </div>
+            <div id="chat-preview" class="chat-area">
+                 <div id="chat-placeholder" class="placeholder">
+                    <p>Selecione um cliente para ver a conversa.</p>
+                </div>
+                <!-- Mensagens da conversa serão inseridas aqui -->
+            </div>
+        </section>
+    </div>
+    
+    <!-- Carrega o script de lógica da interface -->
+    <script src="renderer.js"></script>
 </body>
 </html>
