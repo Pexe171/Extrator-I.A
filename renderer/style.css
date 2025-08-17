@@ -181,8 +181,7 @@ button:hover {
 
 #qr-overlay.mostrar {
     display: flex;
-}
-
+/* QR Code em modal grande */
 #qr-overlay img {
     width: 400px;
     height: 400px;
@@ -191,6 +190,28 @@ button:hover {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
+
+/* QR Code como tooltip ao lado da sessão */
+.qr {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+#sessions li.qr-ativo .qr {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 
 /* --- Área de Chat --- */
 .chat-area {
