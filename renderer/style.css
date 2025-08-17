@@ -45,6 +45,8 @@ body {
     width: 280px;
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
+    position: relative;
+    z-index: 2;
 }
 
 #clients-panel {
@@ -175,9 +177,9 @@ button:hover {
 
 .qr {
     position: absolute;
-    right: 100%;
+    left: 100%;
     top: 0;
-    margin-right: 1rem;
+    margin-left: 1rem;
     padding: 0.5rem;
     background: white;
     border-radius: 8px;
@@ -185,6 +187,7 @@ button:hover {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
+    z-index: 10;
 }
 
 #sessions li.qr-ativo .qr {
