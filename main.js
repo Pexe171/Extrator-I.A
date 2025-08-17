@@ -1,5 +1,6 @@
 // Processo principal do Electron
 import { app, BrowserWindow, ipcMain } from 'electron';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createSession, removeSession } from './whatsapp.js';
@@ -67,4 +68,15 @@ ipcMain.on('add-client', (_e, { sessao, numero }) => {
 
 ipcMain.handle('export-chats', (_e, { sessao, numero, formato }) => {
   return exportarConversas(sessao, numero, formato);
+});
+
+ipcMain.handle('get-history', (_e, { sessao, numero }) => {
+  const pastaSessao = path.join(__dirname, 'dados', sessao);
+  const arquivo = path.join(pastaSessao, `${numero}.json`);
+  if (!fs.existsSync(arquivo)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(arquivo));
+  } catch {
+    return [];
+  }
 });
