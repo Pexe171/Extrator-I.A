@@ -232,3 +232,21 @@ button:hover {
 ::-webkit-scrollbar-track { background: var(--sidebar-bg); }
 ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* --- Barra de progresso --- */
+#progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    display: none;
+    z-index: 1000;
+}
+
+#progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-color);
+}
