@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createSession, removeSession } from './whatsapp.js';
+import { createSession, removeSession, syncSession } from './whatsapp.js';
 import { adicionarCliente, obterClientes } from './clientes.js';
 import { exportarConversas } from './exportador.js';
 
@@ -55,6 +55,10 @@ ipcMain.on('remove-session', (_e, nome) => {
     removeSession(nome);
     janelaPrincipal.webContents.send('session-removed', nome);
   }
+});
+
+ipcMain.on('sync-session', (_e, nome) => {
+  syncSession(nome);
 });
 
 ipcMain.handle('get-clients', (_e, sessao) => {

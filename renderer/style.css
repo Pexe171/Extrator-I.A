@@ -164,23 +164,40 @@ button:hover {
 
 .indicador-status.online { background: var(--success-color); }
 .indicador-status.offline { background: var(--danger-color); }
-#sessions li.qr-ativo .indicador-status {
-    background: var(--warning-color);
-    animation: pulsar 1.5s infinite;
+
+/* --- QR Code em Modal --- */
+#qr-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
-@keyframes pulsar {
-    0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); }
-    50% { box-shadow: 0 0 0 8px rgba(243, 156, 18, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); }
+#qr-overlay.mostrar {
+    display: flex;
+/* QR Code em modal grande */
+#qr-overlay img {
+    width: 400px;
+    height: 400px;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
+/* QR Code como tooltip ao lado da sessão */
 .qr {
     position: absolute;
     left: 100%;
     top: 0;
     margin-left: 1rem;
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
@@ -195,7 +212,6 @@ button:hover {
     pointer-events: auto;
 }
 
-.qr img { width: 120px; height: 120px; }
 
 /* --- Área de Chat --- */
 .chat-area {

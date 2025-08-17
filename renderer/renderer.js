@@ -15,15 +15,28 @@ const exportBtn = document.getElementById('export-chats');
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
 
+const qrOverlay = document.getElementById('qr-overlay');
+const qrImage = document.getElementById('qr-image');
+
+const sessionStatuses = {};
+qrOverlay.addEventListener('click', () => qrOverlay.classList.remove('mostrar'));
+
 let sessaoSelecionada = null;
 let clienteSelecionado = null;
 
 function addSession(nome) {
   const li = document.createElement('li');
   li.dataset.nome = nome;
-  li.innerHTML = `<span class="indicador-status offline"></span><span class="nome">${nome}</span><div class="qr"></div>`;
+  li.innerHTML = `<span class="indicador-status offline"></span><span class="nome">${nome}</span><button class="remover"><i class="fas fa-trash"></i></button>`;
   li.addEventListener('click', () => selecionarSessao(nome, li));
+  const remover = li.querySelector('.remover');
+  remover.addEventListener('click', e => {
+    e.stopPropagation();
+    ipcRenderer.send('remove-session', nome);
+  });
   sessionsList.appendChild(li);
+  sessionStatuses[nome] = 'offline';
+  atualizarEstadoBotaoSessao();
   anime({ targets: li, opacity: [0,1], translateY: [-10,0], duration: 300, easing: 'easeOutQuad' });
 }
 
@@ -70,7 +83,21 @@ function carregarHistorico() {
     });
 }
 
+function podeCriarSessao() {
+  return Object.values(sessionStatuses).every(s => s === 'online');
+}
+
+function atualizarEstadoBotaoSessao() {
+  const permitido = podeCriarSessao();
+  createBtn.disabled = !permitido;
+  sessionInput.disabled = !permitido;
+}
+
 createBtn.addEventListener('click', () => {
+  if (!podeCriarSessao()) {
+    alert('Conclua a configuração da sessão atual antes de adicionar outra.');
+    return;
+  }
   const nome = sessionInput.value.trim();
   if (nome) {
     ipcRenderer.send('create-session', nome);
@@ -135,33 +162,29 @@ ipcRenderer.on('export-progress', (_e, progresso) => {
 ipcRenderer.invoke('get-sessions').then(nomes => nomes.forEach(addSession));
 
 ipcRenderer.on('session-status', (_e, { nome, status }) => {
+  sessionStatuses[nome] = status;
   const li = document.querySelector(`li[data-nome="${nome}"]`);
   if (li) {
     const indicador = li.querySelector('.indicador-status');
     indicador.className = `indicador-status ${status}`;
     if (status === 'online') {
-      li.classList.remove('qr-ativo');
-      const qrDiv = li.querySelector('.qr');
-      qrDiv.innerHTML = '';
+      qrOverlay.classList.remove('mostrar');
+      ipcRenderer.send('sync-session', nome);
     }
   }
+  atualizarEstadoBotaoSessao();
 });
 
-ipcRenderer.on('session-qr', (_e, { nome, qr }) => {
-  const li = document.querySelector(`li[data-nome="${nome}"]`);
-  if (li) {
-    li.classList.add('qr-ativo');
-    const qrDiv = li.querySelector('.qr');
-    const img = document.createElement('img');
-    img.src = qr;
-    qrDiv.innerHTML = '';
-    qrDiv.appendChild(img);
-  }
+ipcRenderer.on('session-qr', (_e, { qr }) => {
+  qrImage.src = qr;
+  qrOverlay.classList.add('mostrar');
 });
 
 ipcRenderer.on('session-removed', (_e, nome) => {
   const li = document.querySelector(`li[data-nome="${nome}"]`);
   if (li) li.remove();
+  delete sessionStatuses[nome];
+  atualizarEstadoBotaoSessao();
   if (sessaoSelecionada === nome) {
     sessaoSelecionada = null;
     clientsList.innerHTML = '';
