@@ -92,3 +92,14 @@ export function removeSession(nome) {
     sessoes.delete(nome);
   }
 }
+
+export async function syncSession(nome) {
+  const cliente = sessoes.get(nome);
+  if (cliente) {
+    try {
+      await cliente.getChats();
+    } catch (err) {
+      registrarErro(`Falha ao sincronizar ${nome}: ${err.message}`);
+    }
+  }
+}
