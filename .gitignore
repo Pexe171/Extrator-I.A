@@ -1,0 +1,5 @@
+node_modules/
+dist/
+dados/*
+!dados/.gitkeep
+.wwebjs_*/
