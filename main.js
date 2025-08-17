@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createSession, removeSession, syncSession } from './whatsapp.js';
+import { createSession, removeSession, syncSession, getContactName } from './whatsapp.js';
 import { adicionarCliente, obterClientes } from './clientes.js';
 import { exportarConversas } from './exportador.js';
 
@@ -61,12 +61,21 @@ ipcMain.on('sync-session', (_e, nome) => {
   syncSession(nome);
 });
 
-ipcMain.handle('get-clients', (_e, sessao) => {
-  return obterClientes(sessao);
+ipcMain.handle('get-clients', async (_e, sessao) => {
+  const numeros = obterClientes(sessao);
+  const clientes = await Promise.all(numeros.map(async numero => ({
+    numero,
+    nome: await getContactName(sessao, numero)
+  })));
+  return clientes;
 });
 
-ipcMain.on('add-client', (_e, { sessao, numero }) => {
-  const clientes = adicionarCliente(sessao, numero);
+ipcMain.on('add-client', async (_e, { sessao, numero }) => {
+  const numeros = adicionarCliente(sessao, numero);
+  const clientes = await Promise.all(numeros.map(async n => ({
+    numero: n,
+    nome: await getContactName(sessao, n)
+  })));
   janelaPrincipal.webContents.send('clients-updated', { sessao, clientes });
 });
 
