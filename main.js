@@ -1,5 +1,9 @@
 import { app, BrowserWindow } from 'electron';
-import './server.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -11,7 +15,7 @@ function createWindow() {
     }
   });
 
-  win.loadURL('http://localhost:3001');
+  win.loadFile(path.join(__dirname, 'dist', 'index.html'));
 }
 
 app.whenReady().then(() => {
