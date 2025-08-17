@@ -187,7 +187,7 @@ button:hover {
     transition: opacity 0.2s ease;
 }
 
-#sessions li.qr-ativo:hover .qr {
+#sessions li.qr-ativo .qr {
     opacity: 1;
     pointer-events: auto;
 }
