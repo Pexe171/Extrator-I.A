@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { adicionarCliente } from './clientes.js';
+import { registrarErro } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,7 @@ export function createSession(nome, janela) {
 
   cliente.on('disconnected', () => {
     janela.webContents.send('session-status', { nome, status: 'offline' });
+    registrarErro(`Sessão ${nome} desconectada.`);
   });
 
   cliente.on('message', msg => {
