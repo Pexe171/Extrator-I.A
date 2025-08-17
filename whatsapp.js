@@ -21,6 +21,7 @@ export function createSession(nome, janela) {
 
   cliente.on('qr', qr => {
     qrcode.generate(qr, { small: true });
+    janela.webContents.send('session-qr', { nome, qr });
   });
 
   cliente.on('ready', () => {
@@ -48,4 +49,12 @@ export function createSession(nome, janela) {
 
   cliente.initialize();
   sessoes.set(nome, cliente);
+}
+
+export function removeSession(nome) {
+  const cliente = sessoes.get(nome);
+  if (cliente) {
+    cliente.destroy();
+    sessoes.delete(nome);
+  }
 }
