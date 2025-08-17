@@ -52,10 +52,13 @@ function selecionarSessao(nome, elemento) {
   });
 }
 
-function addClient(numero) {
+function addClient(cliente) {
+  const numero = typeof cliente === 'string' ? cliente : cliente.numero;
+  const nome = typeof cliente === 'string' ? cliente : (cliente.nome || cliente.numero);
   const li = document.createElement('li');
   li.dataset.numero = numero;
-  li.textContent = numero;
+  li.dataset.nome = nome;
+  li.textContent = nome;
   li.addEventListener('click', () => selecionarCliente(numero, li));
   clientsList.appendChild(li);
   anime({ targets: li, opacity: [0,1], translateY: [-10,0], duration: 300, easing: 'easeOutQuad' });
@@ -124,7 +127,9 @@ ipcRenderer.on('clients-updated', (_e, { sessao, clientes }) => {
 clientSearch.addEventListener('input', () => {
   const termo = clientSearch.value.toLowerCase();
   document.querySelectorAll('#clients li').forEach(li => {
-    li.style.display = li.textContent.toLowerCase().includes(termo) ? '' : 'none';
+    const nome = (li.dataset.nome || '').toLowerCase();
+    const numero = li.dataset.numero || '';
+    li.style.display = nome.includes(termo) || numero.includes(termo) ? '' : 'none';
   });
 });
 

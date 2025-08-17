@@ -103,3 +103,14 @@ export async function syncSession(nome) {
     }
   }
 }
+
+export async function getContactName(sessao, numero) {
+  const cliente = sessoes.get(sessao);
+  if (!cliente) return null;
+  try {
+    const contato = await cliente.getContactById(`${numero}@c.us`);
+    return contato.pushname || contato.name || contato.shortName || null;
+  } catch {
+    return null;
+  }
+}
