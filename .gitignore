@@ -1,7 +1,7 @@
-@"
 node_modules/
 **/.local-chromium/
+backend/.wwebjs_auth/
+backend/dados/*.json
 sessions/
 dist/
 *.log
-"@ | Out-File -Encoding UTF8 .gitignore
