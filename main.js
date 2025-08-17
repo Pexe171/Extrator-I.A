@@ -67,7 +67,9 @@ ipcMain.on('add-client', (_e, { sessao, numero }) => {
 });
 
 ipcMain.handle('export-chats', (_e, { sessao, numero, formato }) => {
-  return exportarConversas(sessao, numero, formato);
+  return exportarConversas(sessao, numero, formato, progresso => {
+    janelaPrincipal.webContents.send('export-progress', progresso);
+  });
 });
 
 ipcMain.handle('get-history', (_e, { sessao, numero }) => {

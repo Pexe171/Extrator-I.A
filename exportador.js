@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pastaDados = path.join(__dirname, 'dados');
 
-export function exportarConversas(sessao, numero, formato = 'json') {
+export function exportarConversas(sessao, numero, formato = 'json', onProgress) {
   const pastaSessao = path.join(pastaDados, sessao);
   if (!fs.existsSync(pastaSessao)) {
     registrarErro(`Sessão inexistente: ${sessao}`);
@@ -25,7 +25,8 @@ export function exportarConversas(sessao, numero, formato = 'json') {
     return { erro: 'Número inválido.' };
   }
 
-  numeros.forEach(num => {
+  if (onProgress) onProgress(0);
+  numeros.forEach((num, index) => {
     const arquivoJson = path.join(pastaSessao, `${num}.json`);
     if (!fs.existsSync(arquivoJson)) return;
     if (formato === 'txt') {
@@ -33,6 +34,7 @@ export function exportarConversas(sessao, numero, formato = 'json') {
       const linhas = historico.map(m => `[${m.data}] ${m.de}: ${m.corpo}`).join('\n');
       fs.writeFileSync(path.join(pastaSessao, `${num}.txt`), linhas);
     }
+    if (onProgress) onProgress((index + 1) / numeros.length);
   });
 
   return { sucesso: true };

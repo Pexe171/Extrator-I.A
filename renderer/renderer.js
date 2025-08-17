@@ -13,6 +13,9 @@ const clientSearch = document.getElementById('client-search');
 const chatPreview = document.getElementById('chat-preview');
 const exportBtn = document.getElementById('export-chats');
 
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+
 let sessaoSelecionada = null;
 let clienteSelecionado = null;
 
@@ -22,6 +25,7 @@ function addSession(nome) {
   li.innerHTML = `<span class="indicador-status offline"></span><span class="nome">${nome}</span><div class="qr"></div>`;
   li.addEventListener('click', () => selecionarSessao(nome, li));
   sessionsList.appendChild(li);
+  anime({ targets: li, opacity: [0,1], translateY: [-10,0], duration: 300, easing: 'easeOutQuad' });
 }
 
 function selecionarSessao(nome, elemento) {
@@ -42,6 +46,7 @@ function addClient(numero) {
   li.textContent = numero;
   li.addEventListener('click', () => selecionarCliente(numero, li));
   clientsList.appendChild(li);
+  anime({ targets: li, opacity: [0,1], translateY: [-10,0], duration: 300, easing: 'easeOutQuad' });
 }
 
 function selecionarCliente(numero, elemento) {
@@ -61,6 +66,7 @@ function carregarHistorico() {
         div.classList.add('mensagem');
         div.innerHTML = `[${m.data}] <span class="de">${m.de}</span> ${m.corpo}`;
         chatPreview.appendChild(div);
+        anime({ targets: div, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutQuad' });
       });
     });
 }
@@ -110,8 +116,21 @@ exportBtn.addEventListener('click', async () => {
     alert('Número inválido.');
     return;
   }
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
   const resposta = await ipcRenderer.invoke('export-chats', { sessao: sessaoSelecionada, numero: numero === 'todos' ? null : numero, formato });
   if (resposta && resposta.erro) alert(resposta.erro);
+});
+
+ipcRenderer.on('export-progress', (_e, progresso) => {
+  progressContainer.style.display = 'block';
+  anime({ targets: progressBar, width: `${progresso * 100}%`, duration: 200, easing: 'easeInOutQuad' });
+  if (progresso >= 1) {
+    setTimeout(() => {
+      progressContainer.style.display = 'none';
+      progressBar.style.width = '0%';
+    }, 500);
+  }
 });
 
 ipcRenderer.invoke('get-sessions').then(nomes => nomes.forEach(addSession));
