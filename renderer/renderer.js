@@ -1,5 +1,4 @@
 const { ipcRenderer } = require('electron');
-const QRCode = require('qrcode');
 
 const sessionInput = document.getElementById('session-name');
 const createBtn = document.getElementById('create-session');
@@ -153,13 +152,10 @@ ipcRenderer.on('session-qr', (_e, { nome, qr }) => {
   if (li) {
     li.classList.add('qr-ativo');
     const qrDiv = li.querySelector('.qr');
-    QRCode.toDataURL(qr, (err, url) => {
-      if (err) return;
-      const img = document.createElement('img');
-      img.src = url;
-      qrDiv.innerHTML = '';
-      qrDiv.appendChild(img);
-    });
+    const img = document.createElement('img');
+    img.src = qr;
+    qrDiv.innerHTML = '';
+    qrDiv.appendChild(img);
   }
 });
 
