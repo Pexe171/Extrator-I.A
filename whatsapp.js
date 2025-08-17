@@ -5,6 +5,7 @@ import qrcode from 'qrcode-terminal';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { adicionarCliente } from './clientes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,9 @@ export function createSession(nome, janela) {
   const cliente = new Client({
     authStrategy: new LocalAuth({ clientId: nome })
   });
+
+  const pastaSessao = path.join(pastaDados, nome);
+  if (!fs.existsSync(pastaSessao)) fs.mkdirSync(pastaSessao, { recursive: true });
 
   cliente.on('qr', qr => {
     qrcode.generate(qr, { small: true });
@@ -34,7 +38,8 @@ export function createSession(nome, janela) {
 
   cliente.on('message', msg => {
     const numero = msg.from.replace('@c.us', '');
-    const arquivo = path.join(pastaDados, `${numero}.json`);
+    adicionarCliente(nome, numero);
+    const arquivo = path.join(pastaSessao, `${numero}.json`);
     let historico = [];
     if (fs.existsSync(arquivo)) {
       try { historico = JSON.parse(fs.readFileSync(arquivo)); } catch { historico = []; }
