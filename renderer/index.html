@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Extrator-I.A</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #1e1e1e;
+    color: #ffffff;
+    display: flex;
+    height: 100vh;
+  }
+  #sessions, #clients {
+    flex: 1;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  #sessions {
+    border-right: 1px solid #333;
+  }
+  h2 {
+    margin-top: 0;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  li {
+    padding: 4px 0;
+  }
+  button {
+    background: #333;
+    border: none;
+    color: #fff;
+    padding: 6px 12px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  input {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+    background: #2e2e2e;
+    border: none;
+    color: #fff;
+    margin-top: 10px;
+  }
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    padding: 10px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div id="sessions">
+    <h2>Sessões</h2>
+    <ul id="sessionList"></ul>
+    <button id="newSession">Nova Sessão</button>
+  </div>
+  <div id="clients">
+    <h2>Clientes</h2>
+    <ul id="clientList"></ul>
+    <input id="newClientInput" type="text" placeholder="Número do cliente" />
+    <button id="addClient">Adicionar Cliente</button>
+  </div>
+  <footer>
+    <button id="exportChats">Exportar Conversas</button>
+  </footer>
+  <script src="renderer.js"></script>
+</body>
+</html>
