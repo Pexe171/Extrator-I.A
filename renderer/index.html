@@ -6,12 +6,29 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Extrator-I.A</h1>
-  <div id="new-session">
-    <input id="session-name" placeholder="Nome da sessão" />
-    <button id="create-session">Criar sessão</button>
+  <div id="app">
+    <aside id="sessions-panel">
+      <div id="new-session">
+        <input id="session-name" placeholder="Nome da sessão" />
+        <button id="create-session">Criar sessão</button>
+      </div>
+      <ul id="sessions"></ul>
+    </aside>
+    <main id="clients-panel">
+      <div id="client-controls">
+        <input id="client-search" placeholder="Buscar cliente" />
+        <div id="new-client">
+          <input id="client-number" placeholder="Número do cliente" />
+          <button id="add-client">Adicionar</button>
+        </div>
+      </div>
+      <ul id="clients"></ul>
+    </main>
+    <section id="preview-panel">
+      <div id="chat-preview"></div>
+    </section>
   </div>
-  <ul id="sessions"></ul>
+  <button id="export-chats">Exportar Conversas</button>
   <script src="renderer.js"></script>
 </body>
 </html>
