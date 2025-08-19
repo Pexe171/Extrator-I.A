@@ -123,15 +123,15 @@ exportBtn.addEventListener('click', async () => {
   if (resposta && resposta.erro) alert(resposta.erro);
 });
 
-ipcRenderer.on('export-progress', (_e, progresso) => {
+ipcRenderer.on('export-progress', (_e, { progress, count }) => {
   progressContainer.style.display = 'block';
   const decorrido = (Date.now() - inicioExport) / 1000;
-  const restante = progresso > 0 ? decorrido * (1 / progresso - 1) : 0;
-  downloadStatus.textContent = progresso >= 1
-    ? 'Download concluído'
-    : `Tempo restante: ${restante.toFixed(1)}s`;
-  anime({ targets: progressBar, width: `${progresso * 100}%`, duration: 200, easing: 'easeInOutQuad' });
-  if (progresso >= 1) {
+  const restante = progress > 0 ? decorrido * (1 / progress - 1) : 0;
+  downloadStatus.textContent = progress >= 1
+    ? `Exportadas ${count} mensagens`
+    : `Exportadas ${count} mensagens - restante ${restante.toFixed(1)}s`;
+  anime({ targets: progressBar, width: `${progress * 100}%`, duration: 200, easing: 'easeInOutQuad' });
+  if (progress >= 1) {
     setTimeout(() => {
       progressContainer.style.display = 'none';
       progressBar.style.width = '0%';

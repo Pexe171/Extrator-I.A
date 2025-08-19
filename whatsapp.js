@@ -67,6 +67,7 @@ export function createSession(nome, janela) {
 
   cliente.on('message', msg => {
     if (msg.from.endsWith('@g.us')) return;
+    if (!msg.body || !msg.body.trim()) return;
     const numero = normalizarNumero(msg.from.replace('@c.us', ''));
     const clientesSessao = obterClientes(nome);
     if (!clientesSessao.includes(numero)) return;
@@ -121,33 +122,36 @@ export async function baixarHistorico(sessao, numero, onProgresso) {
   const cliente = sessoes.get(sessao);
   if (!cliente) return;
   const numeroLimpo = normalizarNumero(numero);
+  const clientesSessao = obterClientes(sessao);
+  if (!clientesSessao.includes(numeroLimpo)) return;
   try {
     const chat = await cliente.getChatById(`${numeroLimpo}@c.us`);
     const pastaSessao = path.join(pastaDados, sessao);
     if (!fs.existsSync(pastaSessao)) fs.mkdirSync(pastaSessao, { recursive: true });
     const limit = 100;
+    const maxMensagens = 1000;
     let mensagens = [];
     let lastId;
     const inicio = Date.now();
-    let estimado = limit;
-    while (true) {
+    while (mensagens.length < maxMensagens) {
       const opts = { limit };
       if (lastId) opts.before = lastId;
       const batch = await chat.fetchMessages(opts);
       if (!batch.length) break;
       mensagens = mensagens.concat(batch);
       lastId = batch[batch.length - 1].id._serialized;
-      const progresso = mensagens.length / estimado;
+      const progresso = mensagens.length / maxMensagens;
       if (onProgresso) {
         const decorrido = (Date.now() - inicio) / 1000;
         const restante = progresso > 0 ? decorrido * (1 / progresso - 1) : 0;
         onProgresso({ progress: Math.min(progresso, 1), count: mensagens.length, remaining: restante });
       }
       if (batch.length < limit) break;
-      estimado += limit;
     }
+    mensagens = mensagens.slice(0, maxMensagens);
     const historico = mensagens
       .reverse()
+      .filter(m => m.body && m.body.trim())
       .map(m => ({
         de: m.fromMe ? 'empresa' : 'cliente',
         texto: m.body,
