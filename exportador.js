@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { registrarErro } from './logger.js';
+import { obterClientes, normalizarNumero } from './clientes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,11 +15,12 @@ export function exportarConversas(sessao, numero, formato = 'json', onProgress) 
     return { erro: 'Sessão desconectada.' };
   }
 
-  const numeros = numero
-    ? [numero]
-    : fs.readdirSync(pastaSessao)
-        .filter(f => f.endsWith('.json'))
-        .map(f => f.replace('.json', ''));
+  let numeros;
+  if (numero) {
+    numeros = [normalizarNumero(numero)];
+  } else {
+    numeros = obterClientes(sessao);
+  }
 
   if (numeros.length === 0) {
     registrarErro(`Nenhum número para exportar na sessão ${sessao}`);
@@ -26,23 +28,30 @@ export function exportarConversas(sessao, numero, formato = 'json', onProgress) 
   }
 
   const resultado = [];
-  if (onProgress) onProgress(0);
+  let total = 0;
+  if (onProgress) onProgress({ progress: 0, count: 0 });
   numeros.forEach((num, index) => {
     const arquivoJson = path.join(pastaSessao, `${num}.json`);
     if (!fs.existsSync(arquivoJson)) {
-      fs.writeFileSync(arquivoJson, '[]');
+      return;
     }
-    const historico = JSON.parse(fs.readFileSync(arquivoJson));
+    const historico = JSON.parse(fs.readFileSync(arquivoJson))
+      .filter(m => m.texto && m.texto.trim())
+      .slice(-1000);
     const registro = { cliente: `+${num}`, mensagens: historico };
+    total += historico.length;
     resultado.push(registro);
     fs.writeFileSync(path.join(pastaSessao, `${num}-cobrador.json`), JSON.stringify(registro, null, 2));
     if (formato === 'txt') {
       const linhas = historico.map(m => `[${m.hora}] ${m.de}: ${m.texto}`).join('\n');
       fs.writeFileSync(path.join(pastaSessao, `${num}.txt`), linhas);
     }
-    if (onProgress) onProgress((index + 1) / numeros.length);
+    if (onProgress) {
+      onProgress({ progress: (index + 1) / numeros.length, count: total });
+    }
   });
 
   fs.writeFileSync(path.join(pastaSessao, 'export.json'), JSON.stringify(resultado, null, 2));
+  if (onProgress) onProgress({ progress: 1, count: total });
   return { sucesso: true };
 }
