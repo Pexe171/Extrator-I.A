@@ -6,7 +6,6 @@ import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { adicionarCliente } from './clientes.js';
 import { registrarErro } from './logger.js';
 
 // Flags para otimizar o uso de memória do Chromium
@@ -66,8 +65,8 @@ export function createSession(nome, janela) {
   });
 
   cliente.on('message', msg => {
+    if (msg.from.endsWith('@g.us')) return;
     const numero = msg.from.replace('@c.us', '');
-    adicionarCliente(nome, numero);
     const arquivo = path.join(pastaSessao, `${numero}.json`);
     let historico = [];
     if (fs.existsSync(arquivo)) {

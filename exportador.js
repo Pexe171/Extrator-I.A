@@ -21,21 +21,26 @@ export function exportarConversas(sessao, numero, formato = 'json', onProgress) 
         .map(f => f.replace('.json', ''));
 
   if (numeros.length === 0) {
-    registrarErro(`Número inválido solicitado na sessão ${sessao}: ${numero}`);
-    return { erro: 'Número inválido.' };
+    registrarErro(`Nenhum número para exportar na sessão ${sessao}`);
+    return { erro: 'Nenhum número encontrado.' };
   }
 
+  const resultado = {};
   if (onProgress) onProgress(0);
   numeros.forEach((num, index) => {
     const arquivoJson = path.join(pastaSessao, `${num}.json`);
-    if (!fs.existsSync(arquivoJson)) return;
+    if (!fs.existsSync(arquivoJson)) {
+      fs.writeFileSync(arquivoJson, '[]');
+    }
+    const historico = JSON.parse(fs.readFileSync(arquivoJson));
+    resultado[num] = historico;
     if (formato === 'txt') {
-      const historico = JSON.parse(fs.readFileSync(arquivoJson));
       const linhas = historico.map(m => `[${m.data}] ${m.de}: ${m.corpo}`).join('\n');
       fs.writeFileSync(path.join(pastaSessao, `${num}.txt`), linhas);
     }
     if (onProgress) onProgress((index + 1) / numeros.length);
   });
 
+  fs.writeFileSync(path.join(pastaSessao, 'export.json'), JSON.stringify(resultado, null, 2));
   return { sucesso: true };
 }
