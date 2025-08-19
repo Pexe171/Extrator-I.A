@@ -10,7 +10,7 @@ const addClientBtn = document.getElementById('add-client');
 const clientSearch = document.getElementById('client-search');
 
 const chatPreview = document.getElementById('chat-preview');
-const exportBtn = document.getElementById('export-chats');
+const exportCobradorBtn = document.getElementById('export-cobrador');
 
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
@@ -79,7 +79,7 @@ function carregarHistorico() {
       mensagens.forEach(m => {
         const div = document.createElement('div');
         div.classList.add('mensagem');
-        div.innerHTML = `[${m.data}] <span class="de">${m.de}</span> ${m.corpo}`;
+        div.innerHTML = `[${m.hora}] <span class="de">${m.de}</span> ${m.texto}`;
         chatPreview.appendChild(div);
         anime({ targets: div, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutQuad' });
       });
@@ -133,23 +133,14 @@ clientSearch.addEventListener('input', () => {
   });
 });
 
-exportBtn.addEventListener('click', async () => {
+exportCobradorBtn.addEventListener('click', async () => {
   if (!sessaoSelecionada) {
     alert('Selecione uma sessão.');
     return;
   }
-  const cliente = prompt('Número do cliente ou "todos"');
-  if (cliente === null) return;
-  let numero = cliente.trim();
-  const formatoInput = prompt('Formato (json/txt)', 'json');
-  const formato = formatoInput === 'txt' ? 'txt' : 'json';
-  if (numero !== 'todos' && !/^\d+$/.test(numero)) {
-    alert('Número inválido.');
-    return;
-  }
   progressContainer.style.display = 'block';
   progressBar.style.width = '0%';
-  const resposta = await ipcRenderer.invoke('export-chats', { sessao: sessaoSelecionada, numero: numero === 'todos' ? null : numero, formato });
+  const resposta = await ipcRenderer.invoke('export-cobrador', { sessao: sessaoSelecionada });
   if (resposta && resposta.erro) alert(resposta.erro);
 });
 

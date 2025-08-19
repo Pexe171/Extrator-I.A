@@ -131,7 +131,7 @@ button:hover {
 #new-client { display: flex; gap: 0.5rem; }
 #client-number { flex: 1; margin-bottom: 0; }
 #add-client { background-color: var(--success-color); }
-#export-chats { font-size: 0.8rem; padding: 0.5rem 0.8rem; }
+#export-cobrador { font-size: 0.8rem; padding: 0.5rem 0.8rem; }
 
 /* --- Listas --- */
 #sessions li, #clients li {

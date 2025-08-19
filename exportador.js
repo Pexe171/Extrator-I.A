@@ -7,34 +7,42 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pastaDados = path.join(__dirname, 'dados');
 
-export function exportarConversas(sessao, numero, formato = 'json', onProgress) {
+export function exportarParaCobrador(sessao, onProgress) {
   const pastaSessao = path.join(pastaDados, sessao);
   if (!fs.existsSync(pastaSessao)) {
     registrarErro(`Sessão inexistente: ${sessao}`);
     return { erro: 'Sessão desconectada.' };
   }
 
-  const numeros = numero
-    ? [numero]
-    : fs.readdirSync(pastaSessao)
-        .filter(f => f.endsWith('.json'))
-        .map(f => f.replace('.json', ''));
-
-  if (numeros.length === 0) {
-    registrarErro(`Número inválido solicitado na sessão ${sessao}: ${numero}`);
-    return { erro: 'Número inválido.' };
+  const arquivos = fs.readdirSync(pastaSessao).filter(f => f.endsWith('.json'));
+  if (arquivos.length === 0) {
+    registrarErro(`Nenhum cliente encontrado na sessão ${sessao}`);
+    return { erro: 'Nenhum cliente encontrado.' };
   }
 
   if (onProgress) onProgress(0);
-  numeros.forEach((num, index) => {
-    const arquivoJson = path.join(pastaSessao, `${num}.json`);
-    if (!fs.existsSync(arquivoJson)) return;
-    if (formato === 'txt') {
-      const historico = JSON.parse(fs.readFileSync(arquivoJson));
-      const linhas = historico.map(m => `[${m.data}] ${m.de}: ${m.corpo}`).join('\n');
-      fs.writeFileSync(path.join(pastaSessao, `${num}.txt`), linhas);
+  arquivos.forEach((arquivo, index) => {
+    const numero = arquivo.replace('.json', '');
+    const caminho = path.join(pastaSessao, arquivo);
+    let conteudo;
+    try { conteudo = JSON.parse(fs.readFileSync(caminho)); } catch { conteudo = null; }
+    if (!conteudo) return;
+    let dados;
+    if (Array.isArray(conteudo)) {
+      const mensagens = conteudo.map(m => ({
+        de: m.de === `${numero}@c.us` ? 'cliente' : 'empresa',
+        texto: m.corpo,
+        hora: (m.data || '').replace('T', ' ').slice(0,16)
+      }));
+      dados = { cliente: `+${numero}`, mensagens };
+    } else {
+      dados = {
+        cliente: conteudo.cliente && conteudo.cliente.startsWith('+') ? conteudo.cliente : `+${numero}`,
+        mensagens: conteudo.mensagens || []
+      };
     }
-    if (onProgress) onProgress((index + 1) / numeros.length);
+    fs.writeFileSync(caminho, JSON.stringify(dados, null, 2));
+    if (onProgress) onProgress((index + 1) / arquivos.length);
   });
 
   return { sucesso: true };
