@@ -25,7 +25,7 @@ export function exportarConversas(sessao, numero, formato = 'json', onProgress) 
     return { erro: 'Nenhum número encontrado.' };
   }
 
-  const resultado = {};
+  const resultado = [];
   if (onProgress) onProgress(0);
   numeros.forEach((num, index) => {
     const arquivoJson = path.join(pastaSessao, `${num}.json`);
@@ -33,9 +33,11 @@ export function exportarConversas(sessao, numero, formato = 'json', onProgress) 
       fs.writeFileSync(arquivoJson, '[]');
     }
     const historico = JSON.parse(fs.readFileSync(arquivoJson));
-    resultado[num] = historico;
+    const registro = { cliente: `+${num}`, mensagens: historico };
+    resultado.push(registro);
+    fs.writeFileSync(path.join(pastaSessao, `${num}-cobrador.json`), JSON.stringify(registro, null, 2));
     if (formato === 'txt') {
-      const linhas = historico.map(m => `[${m.data}] ${m.de}: ${m.corpo}`).join('\n');
+      const linhas = historico.map(m => `[${m.hora}] ${m.de}: ${m.texto}`).join('\n');
       fs.writeFileSync(path.join(pastaSessao, `${num}.txt`), linhas);
     }
     if (onProgress) onProgress((index + 1) / numeros.length);

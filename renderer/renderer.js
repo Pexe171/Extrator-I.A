@@ -23,6 +23,7 @@ qrOverlay.addEventListener('click', () => qrOverlay.classList.remove('mostrar'))
 let sessaoSelecionada = null;
 let clienteSelecionado = null;
 let inicioExport = null;
+let inicioDownload = null;
 
 function addSession(nome) {
   const li = document.createElement('li');
@@ -64,6 +65,11 @@ function selecionarCliente(numero, elemento) {
   clienteSelecionado = numero;
   document.querySelectorAll('#clients li').forEach(li => li.classList.remove('selecionado'));
   elemento.classList.add('selecionado');
+  inicioDownload = Date.now();
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
+  downloadStatus.textContent = '';
+  ipcRenderer.invoke('download-history', { sessao: sessaoSelecionada, numero });
 }
 
 function podeCriarSessao() {
@@ -126,6 +132,22 @@ ipcRenderer.on('export-progress', (_e, progresso) => {
     : `Tempo restante: ${restante.toFixed(1)}s`;
   anime({ targets: progressBar, width: `${progresso * 100}%`, duration: 200, easing: 'easeInOutQuad' });
   if (progresso >= 1) {
+    setTimeout(() => {
+      progressContainer.style.display = 'none';
+      progressBar.style.width = '0%';
+    }, 500);
+  }
+});
+
+ipcRenderer.on('download-progress', (_e, { numero, progress, count, remaining }) => {
+  if (numero !== clienteSelecionado) return;
+  progressContainer.style.display = 'block';
+  const texto = remaining > 0
+    ? `Baixadas ${count} mensagens - restante ${remaining.toFixed(1)}s`
+    : `Baixadas ${count} mensagens`;
+  downloadStatus.textContent = texto;
+  anime({ targets: progressBar, width: `${Math.min(progress,1) * 100}%`, duration: 200, easing: 'easeInOutQuad' });
+  if (progress >= 1) {
     setTimeout(() => {
       progressContainer.style.display = 'none';
       progressBar.style.width = '0%';

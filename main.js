@@ -67,8 +67,13 @@ ipcMain.handle('get-clients', async (_e, sessao) => {
 
 ipcMain.on('add-client', async (_e, { sessao, numero }) => {
   const clientes = adicionarCliente(sessao, numero);
-  await baixarHistorico(sessao, numero);
   janelaPrincipal.webContents.send('clients-updated', { sessao, clientes });
+});
+
+ipcMain.handle('download-history', async (_e, { sessao, numero }) => {
+  return baixarHistorico(sessao, numero, progresso => {
+    janelaPrincipal.webContents.send('download-progress', { numero, ...progresso });
+  });
 });
 
 ipcMain.handle('export-chats', (_e, { sessao, numero, formato }) => {
