@@ -25,6 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pastaDados = path.join(__dirname, 'dados');
 const pastaSessoes = path.join(pastaDados, 'sessions');
+const formatarData = d => d.toISOString().replace('T', ' ').slice(0,16);
 
 if (!fs.existsSync(pastaDados)) fs.mkdirSync(pastaDados, { recursive: true });
 if (!fs.existsSync(pastaSessoes)) fs.mkdirSync(pastaSessoes, { recursive: true });
@@ -65,21 +66,33 @@ export function createSession(nome, janela) {
     registrarErro(`Sessão ${nome} desconectada.`);
   });
 
-  cliente.on('message', msg => {
-    const numero = msg.from.replace('@c.us', '');
+
+  cliente.on('message_create', msg => {
+    const numero = (msg.fromMe ? msg.to : msg.from).replace('@c.us', '');
     adicionarCliente(nome, numero);
     const arquivo = path.join(pastaSessao, `${numero}.json`);
-    let historico = [];
+    let dados = { cliente: `+${numero}`, mensagens: [] };
     if (fs.existsSync(arquivo)) {
-      try { historico = JSON.parse(fs.readFileSync(arquivo)); } catch { historico = []; }
+      try {
+        const existente = JSON.parse(fs.readFileSync(arquivo));
+        if (Array.isArray(existente)) {
+          dados.mensagens = existente;
+        } else {
+          dados = existente;
+        }
+      } catch {
+        dados = { cliente: `+${numero}`, mensagens: [] };
+      }
     }
-    historico.push({
-      de: msg.from,
-      corpo: msg.body,
-      data: new Date().toISOString()
+    dados.cliente = dados.cliente && dados.cliente.startsWith('+') ? dados.cliente : `+${numero}`;
+    dados.mensagens.push({
+      de: msg.fromMe ? 'empresa' : 'cliente',
+      texto: msg.body,
+      hora: formatarData(msg.timestamp ? new Date(msg.timestamp * 1000) : new Date())
     });
-    fs.writeFileSync(arquivo, JSON.stringify(historico, null, 2));
+    fs.writeFileSync(arquivo, JSON.stringify(dados, null, 2));
   });
+
 
   cliente.initialize();
   sessoes.set(nome, cliente);

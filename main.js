@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createSession, removeSession, syncSession, getContactName } from './whatsapp.js';
 import { adicionarCliente, obterClientes } from './clientes.js';
-import { exportarConversas } from './exportador.js';
+import { exportarParaCobrador } from './exportador.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,8 +79,8 @@ ipcMain.on('add-client', async (_e, { sessao, numero }) => {
   janelaPrincipal.webContents.send('clients-updated', { sessao, clientes });
 });
 
-ipcMain.handle('export-chats', (_e, { sessao, numero, formato }) => {
-  return exportarConversas(sessao, numero, formato, progresso => {
+ipcMain.handle('export-cobrador', (_e, { sessao }) => {
+  return exportarParaCobrador(sessao, progresso => {
     janelaPrincipal.webContents.send('export-progress', progresso);
   });
 });
@@ -90,7 +90,9 @@ ipcMain.handle('get-history', (_e, { sessao, numero }) => {
   const arquivo = path.join(pastaSessao, `${numero}.json`);
   if (!fs.existsSync(arquivo)) return [];
   try {
-    return JSON.parse(fs.readFileSync(arquivo));
+    const dados = JSON.parse(fs.readFileSync(arquivo));
+    if (Array.isArray(dados)) return dados;
+    return dados.mensagens || [];
   } catch {
     return [];
   }
