@@ -35,7 +35,6 @@
                 <h2><i class="fas fa-users"></i> Clientes</h2>
             </div>
             <div id="client-controls" class="panel-form">
-                <input id="client-search" placeholder="Buscar cliente..." />
                 <div id="new-client">
                     <input id="client-number" placeholder="Número do cliente" />
                     <button id="add-client">Adicionar</button>
@@ -46,20 +45,15 @@
             </ul>
         </main>
 
-        <!-- Painel de Visualização (Direita) -->
+        <!-- Painel de Download (Direita) -->
         <section id="preview-panel">
              <div class="panel-header">
-                <h2><i class="fas fa-eye"></i> Visualização da Conversa</h2>
+                <h2><i class="fas fa-download"></i> Exportação</h2>
                 <button id="export-chats">
-                    <i class="fas fa-download"></i> Exportar Conversas
+                    <i class="fas fa-download"></i> Baixar Conversas
                 </button>
             </div>
-            <div id="chat-preview" class="chat-area">
-                 <div id="chat-placeholder" class="placeholder">
-                    <p>Selecione um cliente para ver a conversa.</p>
-                </div>
-                <!-- Mensagens da conversa serão inseridas aqui -->
-            </div>
+            <div id="download-status" class="panel-form"></div>
         </section>
     </div>
 

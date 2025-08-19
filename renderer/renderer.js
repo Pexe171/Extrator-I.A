@@ -7,10 +7,9 @@ const sessionsList = document.getElementById('sessions');
 const clientsList = document.getElementById('clients');
 const clientNumberInput = document.getElementById('client-number');
 const addClientBtn = document.getElementById('add-client');
-const clientSearch = document.getElementById('client-search');
 
-const chatPreview = document.getElementById('chat-preview');
 const exportBtn = document.getElementById('export-chats');
+const downloadStatus = document.getElementById('download-status');
 
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
@@ -23,6 +22,7 @@ qrOverlay.addEventListener('click', () => qrOverlay.classList.remove('mostrar'))
 
 let sessaoSelecionada = null;
 let clienteSelecionado = null;
+let inicioExport = null;
 
 function addSession(nome) {
   const li = document.createElement('li');
@@ -46,19 +46,15 @@ function selecionarSessao(nome, elemento) {
   document.querySelectorAll('#sessions li').forEach(li => li.classList.remove('selecionado'));
   elemento.classList.add('selecionado');
   clientsList.innerHTML = '';
-  chatPreview.innerHTML = '';
   ipcRenderer.invoke('get-clients', nome).then(clientes => {
     clientes.forEach(addClient);
   });
 }
 
-function addClient(cliente) {
-  const numero = typeof cliente === 'string' ? cliente : cliente.numero;
-  const nome = typeof cliente === 'string' ? cliente : (cliente.nome || cliente.numero);
+function addClient(numero) {
   const li = document.createElement('li');
   li.dataset.numero = numero;
-  li.dataset.nome = nome;
-  li.textContent = nome;
+  li.textContent = numero;
   li.addEventListener('click', () => selecionarCliente(numero, li));
   clientsList.appendChild(li);
   anime({ targets: li, opacity: [0,1], translateY: [-10,0], duration: 300, easing: 'easeOutQuad' });
@@ -68,22 +64,6 @@ function selecionarCliente(numero, elemento) {
   clienteSelecionado = numero;
   document.querySelectorAll('#clients li').forEach(li => li.classList.remove('selecionado'));
   elemento.classList.add('selecionado');
-  carregarHistorico();
-}
-
-function carregarHistorico() {
-  if (!sessaoSelecionada || !clienteSelecionado) return;
-  ipcRenderer.invoke('get-history', { sessao: sessaoSelecionada, numero: clienteSelecionado })
-    .then(mensagens => {
-      chatPreview.innerHTML = '';
-      mensagens.forEach(m => {
-        const div = document.createElement('div');
-        div.classList.add('mensagem');
-        div.innerHTML = `[${m.data}] <span class="de">${m.de}</span> ${m.corpo}`;
-        chatPreview.appendChild(div);
-        anime({ targets: div, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutQuad' });
-      });
-    });
 }
 
 function podeCriarSessao() {
@@ -124,37 +104,26 @@ ipcRenderer.on('clients-updated', (_e, { sessao, clientes }) => {
   clientes.forEach(addClient);
 });
 
-clientSearch.addEventListener('input', () => {
-  const termo = clientSearch.value.toLowerCase();
-  document.querySelectorAll('#clients li').forEach(li => {
-    const nome = (li.dataset.nome || '').toLowerCase();
-    const numero = li.dataset.numero || '';
-    li.style.display = nome.includes(termo) || numero.includes(termo) ? '' : 'none';
-  });
-});
-
 exportBtn.addEventListener('click', async () => {
   if (!sessaoSelecionada) {
     alert('Selecione uma sessão.');
     return;
   }
-  const cliente = prompt('Número do cliente ou "todos"');
-  if (cliente === null) return;
-  let numero = cliente.trim();
-  const formatoInput = prompt('Formato (json/txt)', 'json');
-  const formato = formatoInput === 'txt' ? 'txt' : 'json';
-  if (numero !== 'todos' && !/^\d+$/.test(numero)) {
-    alert('Número inválido.');
-    return;
-  }
+  inicioExport = Date.now();
   progressContainer.style.display = 'block';
   progressBar.style.width = '0%';
-  const resposta = await ipcRenderer.invoke('export-chats', { sessao: sessaoSelecionada, numero: numero === 'todos' ? null : numero, formato });
+  downloadStatus.textContent = '';
+  const resposta = await ipcRenderer.invoke('export-chats', { sessao: sessaoSelecionada, numero: null, formato: 'json' });
   if (resposta && resposta.erro) alert(resposta.erro);
 });
 
 ipcRenderer.on('export-progress', (_e, progresso) => {
   progressContainer.style.display = 'block';
+  const decorrido = (Date.now() - inicioExport) / 1000;
+  const restante = progresso > 0 ? decorrido * (1 / progresso - 1) : 0;
+  downloadStatus.textContent = progresso >= 1
+    ? 'Download concluído'
+    : `Tempo restante: ${restante.toFixed(1)}s`;
   anime({ targets: progressBar, width: `${progresso * 100}%`, duration: 200, easing: 'easeInOutQuad' });
   if (progresso >= 1) {
     setTimeout(() => {
@@ -193,6 +162,5 @@ ipcRenderer.on('session-removed', (_e, nome) => {
   if (sessaoSelecionada === nome) {
     sessaoSelecionada = null;
     clientsList.innerHTML = '';
-    chatPreview.innerHTML = '';
   }
 });

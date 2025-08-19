@@ -18,6 +18,7 @@ export function salvarClientes(dados) {
 export function adicionarCliente(sessao, numero) {
   const dados = lerClientes();
   if (!dados[sessao]) dados[sessao] = [];
+  if (numero.includes('@g.us')) return dados[sessao];
   if (!dados[sessao].includes(numero)) dados[sessao].push(numero);
   salvarClientes(dados);
   return dados[sessao];
@@ -25,5 +26,5 @@ export function adicionarCliente(sessao, numero) {
 
 export function obterClientes(sessao) {
   const dados = lerClientes();
-  return dados[sessao] || [];
+  return (dados[sessao] || []).filter(n => !n.includes('@g.us'));
 }
