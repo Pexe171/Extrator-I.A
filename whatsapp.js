@@ -6,8 +6,8 @@ import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { registrarErro } from './logger.js';
-import { obterClientes } from './clientes.js';
+import { registrarErro, registrarHistorico } from './logger.js';
+import { obterClientes, normalizarNumero } from './clientes.js';
 
 // Flags para otimizar o uso de memória do Chromium
 const PUPPETEER_ARGS = [
@@ -67,7 +67,7 @@ export function createSession(nome, janela) {
 
   cliente.on('message', msg => {
     if (msg.from.endsWith('@g.us')) return;
-    const numero = msg.from.replace('@c.us', '');
+    const numero = normalizarNumero(msg.from.replace('@c.us', ''));
     const clientesSessao = obterClientes(nome);
     if (!clientesSessao.includes(numero)) return;
     const arquivo = path.join(pastaSessao, `${numero}.json`);
@@ -76,9 +76,9 @@ export function createSession(nome, janela) {
       try { historico = JSON.parse(fs.readFileSync(arquivo)); } catch { historico = []; }
     }
     historico.push({
-      de: msg.from,
-      corpo: msg.body,
-      data: new Date().toISOString()
+      de: msg.fromMe ? 'empresa' : 'cliente',
+      texto: msg.body,
+      hora: new Date().toISOString()
     });
     fs.writeFileSync(arquivo, JSON.stringify(historico, null, 2));
   });
@@ -117,34 +117,51 @@ export async function getContactName(sessao, numero) {
   }
 }
 
-export async function baixarHistorico(sessao, numero) {
+export async function baixarHistorico(sessao, numero, onProgresso) {
   const cliente = sessoes.get(sessao);
   if (!cliente) return;
+  const numeroLimpo = normalizarNumero(numero);
   try {
-    const chat = await cliente.getChatById(`${numero}@c.us`);
+    const chat = await cliente.getChatById(`${numeroLimpo}@c.us`);
     const pastaSessao = path.join(pastaDados, sessao);
     if (!fs.existsSync(pastaSessao)) fs.mkdirSync(pastaSessao, { recursive: true });
+    const limit = 100;
     let mensagens = [];
     let lastId;
+    const inicio = Date.now();
+    let estimado = limit;
     while (true) {
-      const opts = { limit: 100 };
+      const opts = { limit };
       if (lastId) opts.before = lastId;
       const batch = await chat.fetchMessages(opts);
       if (!batch.length) break;
       mensagens = mensagens.concat(batch);
       lastId = batch[batch.length - 1].id._serialized;
-      if (batch.length < 100) break;
+      const progresso = mensagens.length / estimado;
+      if (onProgresso) {
+        const decorrido = (Date.now() - inicio) / 1000;
+        const restante = progresso > 0 ? decorrido * (1 / progresso - 1) : 0;
+        onProgresso({ progress: Math.min(progresso, 1), count: mensagens.length, remaining: restante });
+      }
+      if (batch.length < limit) break;
+      estimado += limit;
     }
     const historico = mensagens
       .reverse()
       .map(m => ({
-        de: m.from,
-        corpo: m.body,
-        data: m.timestamp ? new Date(m.timestamp * 1000).toISOString() : new Date().toISOString()
+        de: m.fromMe ? 'empresa' : 'cliente',
+        texto: m.body,
+        hora: m.timestamp ? new Date(m.timestamp * 1000).toISOString() : new Date().toISOString()
       }));
-    fs.writeFileSync(path.join(pastaSessao, `${numero}.json`), JSON.stringify(historico, null, 2));
+    fs.writeFileSync(path.join(pastaSessao, `${numeroLimpo}.json`), JSON.stringify(historico, null, 2));
+    const tempo = (Date.now() - inicio) / 1000;
+    registrarHistorico(`Sessão ${sessao} número ${numeroLimpo}: ${historico.length} mensagens em ${tempo.toFixed(1)}s`);
+    if (onProgresso) onProgresso({ progress: 1, count: historico.length, remaining: 0 });
+    return historico.length;
   } catch (err) {
-    registrarErro(`Falha ao baixar histórico de ${numero}: ${err.message}`);
+    registrarErro(`Falha ao baixar histórico de ${numeroLimpo}: ${err.message}`);
+    registrarHistorico(`Sessão ${sessao} número ${numeroLimpo}: erro ${err.message}`);
+    if (onProgresso) onProgresso({ progress: 1, count: 0, remaining: 0 });
   }
 }
 

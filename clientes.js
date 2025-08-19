@@ -15,10 +15,15 @@ export function salvarClientes(dados) {
   fs.writeFileSync(arquivoClientes, JSON.stringify(dados, null, 2));
 }
 
+export function normalizarNumero(numero) {
+  return numero.replace(/\D/g, '');
+}
+
 export function adicionarCliente(sessao, numero) {
   const dados = lerClientes();
   if (!dados[sessao]) dados[sessao] = [];
-  if (numero.includes('@g.us')) return dados[sessao];
+  numero = normalizarNumero(numero);
+  if (!numero || numero.includes('@g.us')) return dados[sessao];
   if (!dados[sessao].includes(numero)) dados[sessao].push(numero);
   salvarClientes(dados);
   return dados[sessao];
@@ -26,5 +31,5 @@ export function adicionarCliente(sessao, numero) {
 
 export function obterClientes(sessao) {
   const dados = lerClientes();
-  return (dados[sessao] || []).filter(n => !n.includes('@g.us'));
+  return (dados[sessao] || []).filter(n => n && !n.includes('@g.us'));
 }

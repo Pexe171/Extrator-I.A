@@ -12,3 +12,8 @@ export function registrarErro(mensagem) {
   const linha = `[${new Date().toISOString()}] ${mensagem}\n`;
   fs.appendFileSync(path.join(pastaLogs, 'erros.log'), linha);
 }
+
+export function registrarHistorico(mensagem) {
+  const linha = `[${new Date().toISOString()}] ${mensagem}\n`;
+  fs.appendFileSync(path.join(pastaLogs, 'historico.log'), linha);
+}
