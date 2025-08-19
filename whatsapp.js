@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { registrarErro } from './logger.js';
+import { obterClientes } from './clientes.js';
 
 // Flags para otimizar o uso de memória do Chromium
 const PUPPETEER_ARGS = [
@@ -67,6 +68,8 @@ export function createSession(nome, janela) {
   cliente.on('message', msg => {
     if (msg.from.endsWith('@g.us')) return;
     const numero = msg.from.replace('@c.us', '');
+    const clientesSessao = obterClientes(nome);
+    if (!clientesSessao.includes(numero)) return;
     const arquivo = path.join(pastaSessao, `${numero}.json`);
     let historico = [];
     if (fs.existsSync(arquivo)) {
@@ -113,3 +116,35 @@ export async function getContactName(sessao, numero) {
     return null;
   }
 }
+
+export async function baixarHistorico(sessao, numero) {
+  const cliente = sessoes.get(sessao);
+  if (!cliente) return;
+  try {
+    const chat = await cliente.getChatById(`${numero}@c.us`);
+    const pastaSessao = path.join(pastaDados, sessao);
+    if (!fs.existsSync(pastaSessao)) fs.mkdirSync(pastaSessao, { recursive: true });
+    let mensagens = [];
+    let lastId;
+    while (true) {
+      const opts = { limit: 100 };
+      if (lastId) opts.before = lastId;
+      const batch = await chat.fetchMessages(opts);
+      if (!batch.length) break;
+      mensagens = mensagens.concat(batch);
+      lastId = batch[batch.length - 1].id._serialized;
+      if (batch.length < 100) break;
+    }
+    const historico = mensagens
+      .reverse()
+      .map(m => ({
+        de: m.from,
+        corpo: m.body,
+        data: m.timestamp ? new Date(m.timestamp * 1000).toISOString() : new Date().toISOString()
+      }));
+    fs.writeFileSync(path.join(pastaSessao, `${numero}.json`), JSON.stringify(historico, null, 2));
+  } catch (err) {
+    registrarErro(`Falha ao baixar histórico de ${numero}: ${err.message}`);
+  }
+}
+
